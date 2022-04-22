@@ -1,11 +1,10 @@
+// SPDX-License-Identifier: GPL-2.0-or-later
 /*
- * Copyright (c) 2022  Borislav Sapundzhiev
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * bmp280-probe.c bmp i2c device detection 
+ * 
+ * Copyright (c) 2022  Borislav Sapundzhiev <bsapunjiev@gmail.com>
  */
+ 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/kernel.h>
@@ -41,21 +40,18 @@ static int bmp280_i2c_device_probe(void)
 	pr_info("Probing i2c adapters: [%d-%d]\n", 
 				adapters_nr, I2C_ADAPTERS_MAX);
 
-	for (adapters_nr = adapters_nr; adapters_nr < I2C_ADAPTERS_MAX; adapters_nr++) {
-
-		struct i2c_adapter * i2c_adapter = i2c_get_adapter(adapters_nr);
-
+	for (adapters_nr = adapters_nr; adapters_nr <= I2C_ADAPTERS_MAX; adapters_nr++) {
+		struct i2c_adapter *i2c_adapter = i2c_get_adapter(adapters_nr);
 		if (i2c_adapter) {
 			struct i2c_client *i2c_device = 
-				i2c_new_probed_device(i2c_adapter, 
-							bmp280_i2c_info, probe_i2c_addrs, NULL);
-
-			if (i2c_device) {
+				i2c_new_scanned_device(i2c_adapter, 
+					bmp280_i2c_info, probe_i2c_addrs, NULL);
+			if (!IS_ERR(i2c_device)) {
 				pr_info("Found device: %s @ i2c-%d addr: 0x%x\n", 
 					i2c_device->name, adapters_nr, i2c_device->addr);
-				i2c_release_client(i2c_device);
 			}
 		}
+
 	}
 	return 0;
 }
@@ -74,5 +70,5 @@ module_init(bmp280_probe_init);
 module_exit(bmp280_probe_exit);
 
 MODULE_AUTHOR("Borislav Sapundzhiev <BSapundzhiev@gmail.com>");
-MODULE_DESCRIPTION("bmp280 device detection");
+MODULE_DESCRIPTION("bmpXXX, bme280 device detection");
 MODULE_LICENSE("GPL");
